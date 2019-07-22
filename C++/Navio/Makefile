@@ -9,6 +9,8 @@ OBJECTS = $(SRC:.cpp=.o)
 
 all: $(OBJECTS)
 	ar rcs libnavio.a $(OBJECTS)
+	$(CXX) $(SRC) -std=c++11 -Wno-psabi -shared -fpic -I . -o libnavio2.so
+
 
 clean:
 	rm -f */*.o *.a

@@ -24,7 +24,7 @@ private:
 	float integralFBx, integralFBy, integralFBz;
     std::unique_ptr <InertialSensor> sensor;
 public:
-    AHRS( std::unique_ptr <InertialSensor> imu);
+    AHRS(std::unique_ptr <InertialSensor> imu);
 
     void update(float dt);
     void updateIMU(float dt);
@@ -37,5 +37,21 @@ public:
     float getY();
     float getZ();
 };
+
+
+// extern "C"{
+//    
+// }
+
+extern "C" {
+    AHRS* AHRS_py();
+    void updateIMU_py(AHRS* ahrs);
+    //void getEuler_py(float* roll, float* pitch, float* yaw);
+    std::unique_ptr <InertialSensor> get_inertial_sensor( std::string sensor_name);
+    std::string get_sensor_name(int argc, char *argv[]);
+    void print_help();
+    void imuLoop(AHRS* ahrs);
+}
+
 
 #endif // AHRS_hpp

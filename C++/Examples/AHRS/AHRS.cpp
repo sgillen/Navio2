@@ -44,6 +44,22 @@ AHRS::AHRS(std::unique_ptr <InertialSensor> imu)
     sensor = move(imu);
     q0 = 1; q1 = 0; q2 = 0, q3 = 0; twoKi = 0; twoKp =2;
 }
+
+
+AHRS* AHRS_py(){
+    std::unique_ptr<InertialSensor> imu = get_inertial_sensor("mpu");
+    return new AHRS(move(imu));
+}
+
+void updateIMU_py(AHRS* ahrs){
+    ahrs->updateIMU(.1);
+}
+
+//void getEuler_py(float* roll, float* pitch, float* yaw){
+    
+//}
+
+
 void AHRS::update(float dt)
 {
     float recipNorm;
@@ -415,7 +431,7 @@ std::string get_sensor_name(int argc, char *argv[])
 
 //============================== Main loop ====================================
 
-void imuLoop(AHRS* ahrs, Socket sock)
+void imuLoop(AHRS* ahrs)
 {
     // Orientation data
 
@@ -469,54 +485,6 @@ void imuLoop(AHRS* ahrs, Socket sock)
         // Console output
         printf("ROLL: %+05.2f PITCH: %+05.2f YAW: %+05.2f PERIOD %.4fs RATE %dHz \n", roll, pitch, yaw * -1, dt, int(1/dt));
 
-        // Network output
-        sock.output( ahrs->getW(), ahrs->getX(), ahrs->getY(), ahrs->getZ(), int(1/dt));
-
         dtsumm = 0;
     }
-}
-
-//=============================================================================
-
-int main(int argc, char *argv[])
-{
-    if (check_apm()) {
-        return 1;
-    }
-
-    auto sensor_name = get_sensor_name(argc, argv);
-
-    if (sensor_name.empty())
-        return EXIT_FAILURE;
-
-    auto imu = get_inertial_sensor(sensor_name);
-
-    if (!imu) {
-        printf("Wrong sensor name. Select: mpu or lsm\n");
-        return EXIT_FAILURE;
-    }
-
-    if (!imu->probe()) {
-        printf("Sensor not enable\n");
-        return EXIT_FAILURE;
-    }
-
-    //--------------------------- Network setup -------------------------------
-
-    Socket sock;
-
-    if (argc == 5)
-        sock = Socket(argv[3], argv[4]);
-    else if ( (get_navio_version() == NAVIO) && (argc == 3) )
-            sock = Socket(argv[1], argv[2]);
-        else
-            sock = Socket();
-
-    auto ahrs = std::unique_ptr <AHRS>{new AHRS(move(imu)) };
-
-    //-------------------- Setup gyroscope offset -----------------------------
-
-    ahrs->setGyroOffset();
-    while(1)
-        imuLoop(ahrs.get(), sock);
 }
